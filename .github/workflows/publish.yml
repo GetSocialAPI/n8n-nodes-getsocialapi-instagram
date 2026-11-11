@@ -29,6 +29,6 @@ jobs:
             echo "NPM_TOKEN secret is missing. Add it to GitHub Actions secrets before publishing."
             exit 1
           fi
-          npm publish --access public --provenance
+          npm publish --ignore-scripts --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
