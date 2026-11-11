@@ -1,0 +1,33 @@
+name: Initial npm release (one-time)
+on:
+  push:
+    paths:
+      - '.github/workflows/initial-release.yml'
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/'
+      - name: Install npm
+        run: npm install --global npm@latest
+      - name: Validate and build
+        run: |
+          npm install --no-audit --no-fund
+          npm run lint
+          npm run build
+      - name: Publish with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "Missing NPM_TOKEN GitHub Actions secret"
+            exit 1
+          fi
+          npm publish --ignore-scripts --access public --provenance
