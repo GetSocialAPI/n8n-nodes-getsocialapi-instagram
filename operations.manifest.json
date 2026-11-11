@@ -1,0 +1,26 @@
+{
+  "operations": [
+    "userInfo",
+    "userByUsername",
+    "profile",
+    "userAbout",
+    "searchUsername",
+    "similarUsers",
+    "userMedias",
+    "userTags",
+    "userStories",
+    "userHighlights",
+    "highlightStories",
+    "followers",
+    "following",
+    "mediaInfo",
+    "mediaLikers",
+    "mediaComments",
+    "searchClips",
+    "hashtagInfo",
+    "hashtagSearch",
+    "hashtagPosts",
+    "locationInfo",
+    "locationMedia"
+  ]
+}
