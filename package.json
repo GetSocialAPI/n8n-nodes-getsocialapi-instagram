@@ -45,5 +45,6 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
-  }
+  },
+  "author": "GetSocialAPI <hello@getsocialapi.com>"
 }
