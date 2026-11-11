@@ -1,9 +1,20 @@
-# Publication guide
+# Publishing n8n-nodes-getsocialapi-instagram to npm
 
-1. Wait for GitHub Actions CI to pass.
-2. Set up npm Trusted Publishing for GitHub Actions with owner GetSocialAPI, repository n8n-nodes-getsocialapi-instagram, workflow publish.yml. The npm package must exist before configuring Trusted Publishing. For initial release use an npm granular access token with 2FA bypass and add it as GitHub Actions secret NPM_TOKEN; adapt the workflow temporarily to use the token (do not commit token).
-3. Run the Publish npm package workflow manually only after build and tests pass.
-4. Test installation in self-hosted n8n and then submit n8n-nodes-getsocialapi-instagram via https://creators.n8n.io/nodes.
-5. Increase package.json version for future releases.
+## First release
 
-These files are development source code, not a verified or published npm release. API keys must never be committed.
+1. Confirm the CI workflow **Check n8n community node** passes and test live API calls with your own GetSocialAPI key.
+2. On npmjs.com, create a **new granular access token** limited to publishing (and enable 2FA bypass for automation if your account requires it).
+3. In this GitHub repository, open **Settings → Secrets and variables → Actions → New repository secret**, create a secret named `NPM_TOKEN`, and paste the token there. **Never put it in a repository file, issue, or workflow input.**
+4. Open **Actions → Publish npm package → Run workflow** on branch `main`.
+5. Check the Actions run and the public package page: https://www.npmjs.com/package/n8n-nodes-getsocialapi-instagram .
+6. Submit the published package at https://creators.n8n.io/nodes once installation has been tested.
+
+The workflow publishes `0.2.0` with npm provenance. It is *not* triggered by every commit.
+
+## Future releases
+
+Change `package.json` version, verify CI, and manually run the publish workflow. npm will reject an already published version.
+
+For safer long-term releases, configure an npm Trusted Publisher for this GitHub repository and `publish.yml`. Once OIDC publishing is verified, remove the repository's `NPM_TOKEN` secret and revoke the npm token.
+
+These source files are not proof of successful npm publication. Review the npm package listing after each release.
