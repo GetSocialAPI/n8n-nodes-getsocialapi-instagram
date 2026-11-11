@@ -121,8 +121,8 @@ const QUERY_NAMES: Record<string, string> = { groupId: 'group_id', userId: 'user
 function formatPathValue(name: string, value: string): string {
  const v = value.trim();
  if (!v) throw new Error(name + ' is required');
- if (['userId','groupId','locationId'].includes(name) && !/^\\d{1,20}$/.test(v)) throw new Error(name + ' must be a numeric ID');
- if (name === 'mediaId' && !/^(?:\\d{1,20}|[A-Za-z0-9_-]{5,64})$/.test(v)) throw new Error('Invalid media ID or shortcode');
+ if (['userId','groupId','locationId'].includes(name) && !/^\d{1,20}$/.test(v)) throw new Error(name + ' must be a numeric ID');
+ if (name === 'mediaId' && !/^(?:\d{1,20}|[A-Za-z0-9_-]{5,64})$/.test(v)) throw new Error('Invalid media ID or shortcode');
  return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : name === 'highlightId' ? v.replace(/^highlight:/,'') : v);
 }
 
@@ -852,7 +852,7 @@ export class GetSocialApiInstagram implements INodeType {
     const operation = this.getNodeParameter('operation',i) as string;
     const cfg = OPERATIONS[operation];
     if(!cfg) throw new NodeOperationError(this.getNode(),'Unsupported operation',{itemIndex:i});
-    const path = cfg.path.replace(/\\{(\\w+)\\}/g, (_m,name:string) => formatPathValue(name,String(this.getNodeParameter(name,i))));
+    const path = cfg.path.replace(/\{(\w+)\}/g, (_m,name:string) => formatPathValue(name,String(this.getNodeParameter(name,i))));
     const qs: Record<string,string|number> = {};
     for(const field of cfg.fields){
      const value = this.getNodeParameter(field,i,'') as string | number;
@@ -863,7 +863,7 @@ export class GetSocialApiInstagram implements INodeType {
     if(operation === 'feed'){
      const type = this.getNodeParameter('feedType',i) as string;
      const id = String(this.getNodeParameter('feedId',i));
-     if(!/^\\d{1,20}$/.test(id)) throw new NodeOperationError(this.getNode(),'Feed ID must be numeric',{itemIndex:i});
+     if(!/^\d{1,20}$/.test(id)) throw new NodeOperationError(this.getNode(),'Feed ID must be numeric',{itemIndex:i});
      qs[type === 'group'?'group_id':'user_id'] = id;
     }
     if(operation === 'following' && "instagram" === 'instagram' && qs.count === undefined) qs.count=25;
