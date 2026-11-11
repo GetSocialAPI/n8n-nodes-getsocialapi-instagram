@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, IHttpRequestOptions } from 'n8n-workflow';
-import { ApplicationError, NodeApiError, NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import { ApplicationError, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
 const BASE_URL = "https://api.getsocialapi.com/v1";
 const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
@@ -132,7 +132,7 @@ export class GetSocialApiInstagram implements INodeType {
  icon: 'file:getsocialapi.svg', usableAsTool: true, group: ['transform'], version: 1,
  description: 'Retrieve Instagram data using GetSocialAPI',
  defaults: {name:'GetSocialAPI Instagram'},
- inputs: [NodeConnectionType.Main], outputs: [NodeConnectionType.Main],
+ inputs: ['main'], outputs: ['main'],
  credentials: [{name:'getSocialApiInstagramApi',required:true}],
  properties: [
   {
@@ -874,7 +874,7 @@ export class GetSocialApiInstagram implements INodeType {
    } catch(error){
     if(this.continueOnFail()){output.push({json:{error:error instanceof Error?error.message:String(error)},pairedItem:{item:i}});continue;}
     if(error instanceof NodeOperationError)throw error;
-    throw new NodeApiError(this.getNode(),error as Error,{itemIndex:i});
+    throw new NodeApiError(this.getNode(),{message: error instanceof Error ? error.message : String(error)},{itemIndex:i});
    }
   }
   return [output];
