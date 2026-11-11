@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, IHttpRequestOptions } from 'n8n-workflow';
-import { NodeApiError, NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import { ApplicationError, NodeApiError, NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
 const BASE_URL = "https://api.getsocialapi.com/v1";
 const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
@@ -120,16 +120,16 @@ const QUERY_NAMES: Record<string, string> = { groupId: 'group_id', userId: 'user
 
 function formatPathValue(name: string, value: string): string {
  const v = value.trim();
- if (!v) throw new Error(name + ' is required');
- if (['userId','groupId','locationId'].includes(name) && !/^\d{1,20}$/.test(v)) throw new Error(name + ' must be a numeric ID');
- if (name === 'mediaId' && !/^(?:\d{1,20}|[A-Za-z0-9_-]{5,64})$/.test(v)) throw new Error('Invalid media ID or shortcode');
+ if (!v) throw new ApplicationError(name + ' is required');
+ if (['userId','groupId','locationId'].includes(name) && !/^\d{1,20}$/.test(v)) throw new ApplicationError(name + ' must be a numeric ID');
+ if (name === 'mediaId' && !/^(?:\d{1,20}|[A-Za-z0-9_-]{5,64})$/.test(v)) throw new ApplicationError('Invalid media ID or shortcode');
  return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : name === 'highlightId' ? v.replace(/^highlight:/,'') : v);
 }
 
 export class GetSocialApiInstagram implements INodeType {
  description: INodeTypeDescription = {
  displayName: 'GetSocialAPI Instagram', name: 'getSocialApiInstagram',
- icon: 'file:getsocialapi.svg', group: ['transform'], version: 1,
+ icon: 'file:getsocialapi.svg', usableAsTool: true, group: ['transform'], version: 1,
  description: 'Retrieve Instagram data using GetSocialAPI',
  defaults: {name:'GetSocialAPI Instagram'},
  inputs: [NodeConnectionType.Main], outputs: [NodeConnectionType.Main],
@@ -874,7 +874,7 @@ export class GetSocialApiInstagram implements INodeType {
    } catch(error){
     if(this.continueOnFail()){output.push({json:{error:error instanceof Error?error.message:String(error)},pairedItem:{item:i}});continue;}
     if(error instanceof NodeOperationError)throw error;
-    throw new NodeApiError(this.getNode(),error as any,{itemIndex:i});
+    throw new NodeApiError(this.getNode(),error as Error,{itemIndex:i});
    }
   }
   return [output];
