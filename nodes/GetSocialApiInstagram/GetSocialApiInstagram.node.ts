@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, IHttpRequestOptions } from 'n8n-workflow';
-import { ApplicationError, NodeApiError, NodeOperationError } from 'n8n-workflow';
+import { ApplicationError, NodeApiError, NodeOperationError, NodeConnectionTypes } from 'n8n-workflow';
 
 const BASE_URL = "https://api.getsocialapi.com/v1";
 const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
@@ -131,10 +131,48 @@ export class GetSocialApiInstagram implements INodeType {
  displayName: 'GetSocialAPI Instagram', name: 'getSocialApiInstagram',
  icon: 'file:getsocialapi.svg', usableAsTool: true, group: ['transform'], version: 1,
  description: 'Retrieve Instagram data using GetSocialAPI',
+ subtitle: '={{$parameter["resource"] + " / " + $parameter["operation"]}}',
  defaults: {name:'GetSocialAPI Instagram'},
- inputs: ['main'], outputs: ['main'],
+ inputs: [NodeConnectionTypes.Main], outputs: [NodeConnectionTypes.Main],
  credentials: [{name:'getSocialApiInstagramApi',required:true}],
  properties: [
+  {
+    "displayName": "Resource",
+    "name": "resource",
+    "type": "options",
+    "noDataExpression": true,
+    "options": [
+      {
+        "name": "Profile",
+        "value": "profile"
+      },
+      {
+        "name": "Search",
+        "value": "search"
+      },
+      {
+        "name": "User Content",
+        "value": "usercontent"
+      },
+      {
+        "name": "Connections",
+        "value": "connections"
+      },
+      {
+        "name": "Media",
+        "value": "media"
+      },
+      {
+        "name": "Hashtag",
+        "value": "hashtag"
+      },
+      {
+        "name": "Location",
+        "value": "location"
+      }
+    ],
+    "default": "profile"
+  },
   {
     "displayName": "Operation",
     "name": "operation",
@@ -167,17 +205,61 @@ export class GetSocialApiInstagram implements INodeType {
         "action": "Get User About"
       },
       {
+        "name": "Get Similar Users",
+        "value": "similarUsers",
+        "description": "Retrieve data using GetSocialAPI",
+        "action": "Get Similar Users"
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "profile"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Operation",
+    "name": "operation",
+    "type": "options",
+    "noDataExpression": true,
+    "default": "searchUsername",
+    "options": [
+      {
         "name": "Search Usernames",
         "value": "searchUsername",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Search Usernames"
       },
       {
-        "name": "Get Similar Users",
-        "value": "similarUsers",
+        "name": "Search Reels",
+        "value": "searchClips",
         "description": "Retrieve data using GetSocialAPI",
-        "action": "Get Similar Users"
+        "action": "Search Reels"
       },
+      {
+        "name": "Search Hashtags",
+        "value": "hashtagSearch",
+        "description": "Retrieve data using GetSocialAPI",
+        "action": "Search Hashtags"
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "search"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Operation",
+    "name": "operation",
+    "type": "options",
+    "noDataExpression": true,
+    "default": "userMedias",
+    "options": [
       {
         "name": "Get User Media",
         "value": "userMedias",
@@ -207,7 +289,23 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "highlightStories",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Highlight Stories"
-      },
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "usercontent"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Operation",
+    "name": "operation",
+    "type": "options",
+    "noDataExpression": true,
+    "default": "followers",
+    "options": [
       {
         "name": "Get Followers",
         "value": "followers",
@@ -219,7 +317,23 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "following",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Following"
-      },
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "connections"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Operation",
+    "name": "operation",
+    "type": "options",
+    "noDataExpression": true,
+    "default": "mediaInfo",
+    "options": [
       {
         "name": "Get Media Info",
         "value": "mediaInfo",
@@ -237,13 +351,23 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "mediaComments",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Media Comments"
-      },
-      {
-        "name": "Search Reels",
-        "value": "searchClips",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Search Reels"
-      },
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "media"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Operation",
+    "name": "operation",
+    "type": "options",
+    "noDataExpression": true,
+    "default": "hashtagInfo",
+    "options": [
       {
         "name": "Get Hashtag Info",
         "value": "hashtagInfo",
@@ -251,17 +375,27 @@ export class GetSocialApiInstagram implements INodeType {
         "action": "Get Hashtag Info"
       },
       {
-        "name": "Search Hashtags",
-        "value": "hashtagSearch",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Search Hashtags"
-      },
-      {
         "name": "Get Hashtag Posts",
         "value": "hashtagPosts",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Hashtag Posts"
-      },
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "hashtag"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Operation",
+    "name": "operation",
+    "type": "options",
+    "noDataExpression": true,
+    "default": "locationInfo",
+    "options": [
       {
         "name": "Get Location Info",
         "value": "locationInfo",
@@ -274,7 +408,14 @@ export class GetSocialApiInstagram implements INodeType {
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Location Media"
       }
-    ]
+    ],
+    "displayOptions": {
+      "show": {
+        "resource": [
+          "location"
+        ]
+      }
+    }
   },
   {
     "displayName": "User ID",
@@ -286,6 +427,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userInfo"
+        ],
+        "resource": [
+          "profile"
         ]
       }
     }
@@ -300,6 +444,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userByUsername"
+        ],
+        "resource": [
+          "profile"
         ]
       }
     }
@@ -313,6 +460,9 @@ export class GetSocialApiInstagram implements INodeType {
     "displayOptions": {
       "show": {
         "operation": [
+          "profile"
+        ],
+        "resource": [
           "profile"
         ]
       }
@@ -328,6 +478,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userAbout"
+        ],
+        "resource": [
+          "profile"
         ]
       }
     }
@@ -342,6 +495,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "searchUsername"
+        ],
+        "resource": [
+          "search"
         ]
       }
     }
@@ -356,6 +512,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "searchUsername"
+        ],
+        "resource": [
+          "search"
         ]
       }
     },
@@ -374,6 +533,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "similarUsers"
+        ],
+        "resource": [
+          "profile"
         ]
       }
     }
@@ -388,6 +550,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userMedias"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -402,6 +567,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userMedias"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     },
@@ -420,6 +588,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userMedias"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -434,6 +605,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userTags"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -448,6 +622,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userTags"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     },
@@ -466,6 +643,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userTags"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -480,6 +660,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userStories"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -494,6 +677,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userHighlights"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -508,6 +694,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "highlightStories"
+        ],
+        "resource": [
+          "usercontent"
         ]
       }
     }
@@ -522,6 +711,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "followers"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     }
@@ -536,6 +728,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "followers"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     },
@@ -554,6 +749,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "followers"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     }
@@ -568,6 +766,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "followers"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     }
@@ -582,6 +783,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "following"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     }
@@ -596,6 +800,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "following"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     },
@@ -614,6 +821,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "following"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     }
@@ -628,6 +838,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "following"
+        ],
+        "resource": [
+          "connections"
         ]
       }
     }
@@ -642,6 +855,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "mediaInfo"
+        ],
+        "resource": [
+          "media"
         ]
       }
     }
@@ -656,6 +872,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "mediaLikers"
+        ],
+        "resource": [
+          "media"
         ]
       }
     }
@@ -670,6 +889,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "mediaComments"
+        ],
+        "resource": [
+          "media"
         ]
       }
     }
@@ -684,6 +906,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "mediaComments"
+        ],
+        "resource": [
+          "media"
         ]
       }
     },
@@ -702,6 +927,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "mediaComments"
+        ],
+        "resource": [
+          "media"
         ]
       }
     },
@@ -726,6 +954,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "mediaComments"
+        ],
+        "resource": [
+          "media"
         ]
       }
     }
@@ -740,6 +971,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "searchClips"
+        ],
+        "resource": [
+          "search"
         ]
       }
     }
@@ -754,6 +988,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "hashtagInfo"
+        ],
+        "resource": [
+          "hashtag"
         ]
       }
     }
@@ -768,6 +1005,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "hashtagSearch"
+        ],
+        "resource": [
+          "search"
         ]
       }
     }
@@ -782,6 +1022,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "hashtagPosts"
+        ],
+        "resource": [
+          "hashtag"
         ]
       }
     }
@@ -796,6 +1039,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "hashtagPosts"
+        ],
+        "resource": [
+          "hashtag"
         ]
       }
     }
@@ -810,6 +1056,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "locationInfo"
+        ],
+        "resource": [
+          "location"
         ]
       }
     }
@@ -824,6 +1073,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "locationMedia"
+        ],
+        "resource": [
+          "location"
         ]
       }
     }
@@ -838,6 +1090,9 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "locationMedia"
+        ],
+        "resource": [
+          "location"
         ]
       }
     }
@@ -873,7 +1128,7 @@ export class GetSocialApiInstagram implements INodeType {
     output.push({json,pairedItem:{item:i}});
    } catch(error){
     if(this.continueOnFail()){output.push({json:{error:error instanceof Error?error.message:String(error)},pairedItem:{item:i}});continue;}
-    if(error instanceof NodeOperationError)throw error;
+    if(error instanceof NodeOperationError) throw new NodeOperationError(this.getNode(),error.message,{itemIndex:i});
     throw new NodeApiError(this.getNode(),{message: error instanceof Error ? error.message : String(error)},{itemIndex:i});
    }
   }
