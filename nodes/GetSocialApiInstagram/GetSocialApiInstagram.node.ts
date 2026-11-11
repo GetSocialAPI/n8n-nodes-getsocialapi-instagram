@@ -129,7 +129,7 @@ function formatPathValue(name: string, value: string): string {
 export class GetSocialApiInstagram implements INodeType {
  description: INodeTypeDescription = {
  displayName: 'GetSocialAPI Instagram', name: 'getSocialApiInstagram',
- icon: 'file:getsocialapi.svg', usableAsTool: true, group: ['transform'], version: 1,
+ icon: { light: 'file:getsocialapi.svg', dark: 'file:getsocialapi.svg' }, usableAsTool: true, group: ['transform'], version: 1,
  description: 'Retrieve Instagram data using GetSocialAPI',
  subtitle: '={{$parameter["resource"] + " / " + $parameter["operation"]}}',
  defaults: {name:'GetSocialAPI Instagram'},
