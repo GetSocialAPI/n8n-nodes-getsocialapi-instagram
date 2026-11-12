@@ -1,0 +1,38 @@
+name: Release 0.2.2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-0_2_2.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/'
+      - name: Update npm
+        run: npm install --global npm@latest
+      - name: Install and validate
+        run: |
+          npm install --no-audit --no-fund
+          npm run lint
+          npm run build
+      - name: Publish to npm with provenance
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN secret is missing. Add it to GitHub Actions secrets before publishing."
+            exit 1
+          fi
+          node -e 'if (require("./package.json").version !== "0.2.2") process.exit(1)'
+          npm publish --ignore-scripts --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
