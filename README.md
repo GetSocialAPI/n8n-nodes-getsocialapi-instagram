@@ -33,9 +33,30 @@ Community node connecting [n8n](https://n8n.io/) to [GetSocialAPI](https://getso
 2. In n8n, install this community package and create **GetSocialAPI Instagram API** credentials.
 3. Select an operation. No Instagram profile login or cookies are needed.
 
-API key is sent as `X-API-Key`. Operations return raw JSON responses. Cursor fields are available for manual pagination; automatic multi-page iteration is not yet provided.
+The API key is sent as `X-API-Key`. Single-object operations return the API response. List operations return one n8n item per record. Use **Return All** to retrieve all available records, or disable it and set **Limit**. The node follows API cursors internally. Some endpoints only expose one page, including the **Ranked** comments preview. Existing workflows using node version 1 retain their original response format and parameters.
 
 See https://getsocialapi.com/docs for full API details.
+
+## Usage example
+
+### Get an Instagram profile by username
+
+1. Add the **GetSocialAPI Instagram** node and select your API credentials.
+2. Set **Resource** to **Profile** and **Operation** to **Get User by Username**.
+3. Enter `nike` as **Username**, then execute the node.
+
+Example output (abbreviated):
+
+```json
+{
+  "user": {
+    "username": "nike",
+    "is_verified": true
+  }
+}
+```
+
+For **Get Followers**, use the numeric ID from the profile response. Turn off **Return All** and set **Limit** to 10 to retrieve up to ten followers.
 
 ## Development
 
@@ -48,7 +69,7 @@ npm run dev
 
 ## Release
 
-See PUBLISHING.md. Do not publish until CI and real API tests pass.
+See [PUBLISHING.md](PUBLISHING.md).
 
 ## License
 

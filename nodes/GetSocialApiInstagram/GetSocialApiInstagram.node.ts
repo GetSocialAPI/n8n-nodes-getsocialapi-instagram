@@ -1,4 +1,4 @@
-import type { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, IHttpRequestOptions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, IHttpRequestOptions } from 'n8n-workflow';
 import { ApplicationError, NodeApiError, NodeOperationError, NodeConnectionTypes } from 'n8n-workflow';
 
 const BASE_URL = "https://api.getsocialapi.com/v1";
@@ -126,10 +126,46 @@ function formatPathValue(name: string, value: string): string {
  return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : name === 'highlightId' ? v.replace(/^highlight:/,'') : v);
 }
 
+type ListPage = { records: IDataObject[]; cursor?: string };
+
+const LIST_OPERATIONS = new Set(["searchUsername", "similarUsers", "userMedias", "userTags", "userStories", "userHighlights", "highlightStories", "followers", "following", "mediaLikers", "mediaComments", "searchClips", "hashtagSearch", "hashtagPosts", "locationMedia"]);
+const PAGINATED_OPERATIONS = new Set(["userMedias", "userTags", "followers", "following", "mediaComments", "hashtagPosts", "locationMedia"]);
+const LEGACY_LIST_FIELDS = new Set(["count", "maxId", "minId", "query", "sortOrder"]);
+
+const LIST_FIELDS: Record<string, string> = {
+ searchUsername: 'users', similarUsers: 'users', userMedias: 'items', userTags: 'items',
+ userHighlights: 'tray', followers: 'users', following: 'users', mediaLikers: 'users',
+ mediaComments: 'comments', searchClips: 'items', hashtagSearch: 'results', hashtagPosts: 'posts',
+};
+
+function getListPage(response: IDataObject, operation: string, qs: Record<string, string | number>): ListPage {
+ let values: unknown = response[LIST_FIELDS[operation]];
+ if (operation === 'userStories') {
+  values = (response.reel as { items?: IDataObject[] } | null)?.items ?? [];
+ } else if (operation === 'highlightStories') {
+  const reels = response.reels as Record<string, { items?: IDataObject[] }> | undefined;
+  values = Object.values(reels ?? {}).flatMap(reel => reel.items ?? []);
+ } else if (operation === 'locationMedia') {
+  const sections = response.sections as Array<{
+   layout_content?: { medias?: Array<{ media?: IDataObject }> };
+  }> | undefined;
+  values = sections?.flatMap(section => section.layout_content?.medias ?? [])
+   .flatMap(({ media }) => media ? [media] : []);
+ }
+ if (!Array.isArray(values) && (response.status === 'fail' || response.error || response.message)) {
+  throw new ApplicationError('Unexpected Instagram list response');
+ }
+ const records = (Array.isArray(values) ? values : []) as IDataObject[];
+ const next = operation === 'mediaComments'
+  ? (qs.sort_order === 'recent' && records.length > 0 ? response.next_min_id : undefined)
+  : (response.more_available === false ? undefined : response.next_max_id);
+ return { records, cursor: typeof next === 'string' && next ? next : undefined };
+}
+
 export class GetSocialApiInstagram implements INodeType {
  description: INodeTypeDescription = {
  displayName: 'GetSocialAPI Instagram', name: 'getSocialApiInstagram',
- icon: { light: 'file:getsocialapi.svg', dark: 'file:getsocialapi-dark.svg' }, usableAsTool: true, group: ['transform'], version: 1,
+ icon: { light: 'file:getsocialapi.svg', dark: 'file:getsocialapi-dark.svg' }, usableAsTool: true, group: ['transform'], version: [1, 2], defaultVersion: 2,
  description: 'Retrieve Instagram data using GetSocialAPI',
  subtitle: '={{$parameter["resource"] + " / " + $parameter["operation"]}}',
  defaults: {name:'GetSocialAPI Instagram'},
@@ -515,6 +551,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "search"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -570,6 +609,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "usercontent"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -591,6 +633,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "usercontent"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -625,6 +670,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "usercontent"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -646,6 +694,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "usercontent"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -731,6 +782,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "connections"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -752,6 +806,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "connections"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -769,6 +826,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "connections"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -803,6 +863,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "connections"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -824,6 +887,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "connections"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -841,6 +907,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "connections"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -909,6 +978,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "media"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -930,6 +1002,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "media"
+        ],
+        "@version": [
+          1
         ]
       }
     },
@@ -957,6 +1032,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "media"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -1042,6 +1120,9 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "hashtag"
+        ],
+        "@version": [
+          1
         ]
       }
     }
@@ -1093,6 +1174,139 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "location"
+        ],
+        "@version": [
+          1
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Return All",
+    "name": "returnAll",
+    "type": "boolean",
+    "default": false,
+    "description": "Whether to return all results or only up to a given limit",
+    "displayOptions": {
+      "show": {
+        "operation": [
+          "searchUsername",
+          "similarUsers",
+          "userMedias",
+          "userTags",
+          "userStories",
+          "userHighlights",
+          "highlightStories",
+          "followers",
+          "following",
+          "mediaLikers",
+          "mediaComments",
+          "searchClips",
+          "hashtagSearch",
+          "hashtagPosts",
+          "locationMedia"
+        ],
+        "@version": [
+          2
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Limit",
+    "name": "limit",
+    "type": "number",
+    "default": 50,
+    "description": "Max number of results to return",
+    "typeOptions": {
+      "minValue": 1
+    },
+    "displayOptions": {
+      "show": {
+        "operation": [
+          "searchUsername",
+          "similarUsers",
+          "userMedias",
+          "userTags",
+          "userStories",
+          "userHighlights",
+          "highlightStories",
+          "followers",
+          "following",
+          "mediaLikers",
+          "mediaComments",
+          "searchClips",
+          "hashtagSearch",
+          "hashtagPosts",
+          "locationMedia"
+        ],
+        "returnAll": [
+          false
+        ],
+        "@version": [
+          2
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Additional Fields",
+    "name": "additionalFields",
+    "type": "collection",
+    "placeholder": "Add Field",
+    "default": {},
+    "options": [
+      {
+        "displayName": "Name Filter",
+        "name": "query",
+        "type": "string",
+        "default": ""
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "operation": [
+          "followers",
+          "following"
+        ],
+        "@version": [
+          2
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "Additional Fields",
+    "name": "additionalFields",
+    "type": "collection",
+    "placeholder": "Add Field",
+    "default": {},
+    "options": [
+      {
+        "displayName": "Sort Order",
+        "name": "sortOrder",
+        "type": "options",
+        "default": "recent",
+        "options": [
+          {
+            "name": "Recent",
+            "value": "recent"
+          },
+          {
+            "name": "Ranked",
+            "value": "ranked"
+          }
+        ],
+        "description": "Order of comments. Recent supports cursor pagination. Ranked returns the available preview page."
+      }
+    ],
+    "displayOptions": {
+      "show": {
+        "operation": [
+          "mediaComments"
+        ],
+        "@version": [
+          2
         ]
       }
     }
@@ -1102,34 +1316,73 @@ export class GetSocialApiInstagram implements INodeType {
  async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
   const items = this.getInputData();
   const output: INodeExecutionData[] = [];
-  for(let i=0;i<items.length;i++){
+  const legacy = this.getNode().typeVersion === 1;
+  for (let i = 0; i < items.length; i++) {
    try {
-    const operation = this.getNodeParameter('operation',i) as string;
+    const operation = this.getNodeParameter('operation', i) as string;
     const cfg = OPERATIONS[operation];
-    if(!cfg) throw new NodeOperationError(this.getNode(),'Unsupported operation',{itemIndex:i});
-    const path = cfg.path.replace(/\{(\w+)\}/g, (_m,name:string) => formatPathValue(name,String(this.getNodeParameter(name,i))));
-    const qs: Record<string,string|number> = {};
-    for(const field of cfg.fields){
-     const value = this.getNodeParameter(field,i,'') as string | number;
-     if(value === '' || value === null || value === undefined || value === 0) continue;
-     if(field === 'feedType' || field === 'feedId') continue;
+    if (!cfg || !Object.prototype.hasOwnProperty.call(OPERATIONS, operation)) {
+     throw new NodeOperationError(this.getNode(), 'Unsupported operation', { itemIndex: i });
+    }
+    const path = cfg.path.replace(/\{(\w+)\}/g, (_match, name: string) =>
+     formatPathValue(name, String(this.getNodeParameter(name, i))),
+    );
+    const qs: Record<string, string | number> = {};
+    const fields = legacy ? cfg.fields : cfg.fields.filter(field => !LEGACY_LIST_FIELDS.has(field));
+    for (const field of fields) {
+     const value = this.getNodeParameter(field, i, '') as string | number;
+     if (value === '' || value === null || value === undefined || value === 0) continue;
      qs[QUERY_NAMES[field] ?? field] = value;
     }
-    if(operation === 'feed'){
-     const type = this.getNodeParameter('feedType',i) as string;
-     const id = String(this.getNodeParameter('feedId',i));
-     if(!/^\d{1,20}$/.test(id)) throw new NodeOperationError(this.getNode(),'Feed ID must be numeric',{itemIndex:i});
-     qs[type === 'group'?'group_id':'user_id'] = id;
+    const additional = legacy ? {} : this.getNodeParameter('additionalFields', i, {}) as IDataObject;
+    if (!legacy && typeof additional.query === 'string' && additional.query) qs.query = additional.query;
+    if (operation === 'following' && qs.count === undefined) qs.count = 25;
+    if (!legacy && operation === 'mediaComments') qs.sort_order = additional.sortOrder === 'ranked' ? 'ranked' : 'recent';
+    const isList = !legacy && LIST_OPERATIONS.has(operation);
+    const returnAll = isList && this.getNodeParameter('returnAll', i, false) === true;
+    const limit = isList && !returnAll ? Number(this.getNodeParameter('limit', i, 50)) : Infinity;
+    if (!returnAll && isList && (!Number.isSafeInteger(limit) || limit < 1)) {
+     throw new NodeOperationError(this.getNode(), 'Limit must be a positive integer', { itemIndex: i });
     }
-    if(operation === 'following' && "instagram" === 'instagram' && qs.count === undefined) qs.count=25;
-    const request: IHttpRequestOptions = {method:'GET',url:BASE_URL+path,qs,json:true,timeout:30000};
-    const response: unknown = await this.helpers.httpRequestWithAuthentication.call(this,'getSocialApiInstagramApi',request);
-    const json = response && typeof response === 'object' && !Array.isArray(response) ? response as INodeExecutionData['json'] : {data:response} as INodeExecutionData['json'];
-    output.push({json,pairedItem:{item:i}});
-   } catch(error){
-    if(this.continueOnFail()){output.push({json:{error:error instanceof Error?error.message:String(error)},pairedItem:{item:i}});continue;}
-    if(error instanceof NodeOperationError) throw new NodeOperationError(this.getNode(),error.message,{itemIndex:i});
-    throw new NodeApiError(this.getNode(),{message: error instanceof Error ? error.message : String(error)},{itemIndex:i});
+
+    const records: IDataObject[] = [];
+    const seenCursors = new Set<string>();
+    const seenIds = new Set<string>();
+    while (true) {
+     const request: IHttpRequestOptions = { method: 'GET', url: BASE_URL + path, qs, json: true, timeout: 30000 };
+     const response: unknown = await this.helpers.httpRequestWithAuthentication.call(this, 'getSocialApiInstagramApi', request);
+     const json = response && typeof response === 'object' && !Array.isArray(response)
+      ? response as IDataObject : { data: response } as IDataObject;
+     if (!isList) {
+      records.push(json);
+      break;
+     }
+
+     const page = getListPage(json, operation, qs);
+     for (const record of page.records) {
+      const id = record.pk ?? record.id;
+      if (typeof id === 'string' || typeof id === 'number') {
+       if (seenIds.has(String(id))) continue;
+       seenIds.add(String(id));
+      }
+      records.push(record);
+      if (records.length >= limit) break;
+     }
+     const cursor = page.cursor;
+     if (records.length >= limit || !PAGINATED_OPERATIONS.has(operation) || !cursor || seenCursors.has(cursor)) break;
+     seenCursors.add(cursor);
+     qs[operation === 'mediaComments' ? 'min_id' : 'max_id'] = cursor;
+    }
+    for (const json of records) output.push({ json, pairedItem: { item: i } });
+   } catch (error) {
+    if (this.continueOnFail()) {
+     output.push({ json: { error: error instanceof Error ? error.message : String(error) }, pairedItem: { item: i } });
+     continue;
+    }
+    if (error instanceof NodeOperationError) {
+     throw new NodeOperationError(this.getNode(), error.message, { itemIndex: i });
+    }
+    throw new NodeApiError(this.getNode(), { message: error instanceof Error ? error.message : String(error) }, { itemIndex: i });
    }
   }
   return [output];

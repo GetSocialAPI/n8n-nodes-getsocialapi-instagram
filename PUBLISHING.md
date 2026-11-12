@@ -1,5 +1,7 @@
 # Publishing n8n-nodes-getsocialapi-instagram to npm
 
+Do not publish until CI and real API tests pass.
+
 ## First release
 
 1. Confirm the CI workflow **Check n8n community node** passes and test live API calls with your own GetSocialAPI key.
@@ -9,7 +11,7 @@
 5. Check the Actions run and the public package page: https://www.npmjs.com/package/n8n-nodes-getsocialapi-instagram .
 6. Submit the published package at https://creators.n8n.io/nodes once installation has been tested.
 
-The workflow publishes `0.2.0` with npm provenance. It is *not* triggered by every commit.
+The workflow publishes the version in `package.json` with npm provenance. It is *not* triggered by every commit.
 
 ## Future releases
 
