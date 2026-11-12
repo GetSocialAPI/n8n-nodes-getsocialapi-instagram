@@ -29,13 +29,19 @@ Community node connecting [n8n](https://n8n.io/) to [GetSocialAPI](https://getso
 
 ## Setup
 
-1. Get your API key from https://getsocialapi.com/dashboard/
+1. [Create a GetSocialAPI account](https://getsocialapi.com/dashboard/signup/) and copy your API key from the [dashboard](https://getsocialapi.com/dashboard/). The trial includes 100 API calls with no credit card required.
 2. In n8n, install this community package and create **GetSocialAPI Instagram API** credentials.
 3. Select an operation. No Instagram profile login or cookies are needed.
 
 The API key is sent as `X-API-Key`. Single-object operations return the API response. List operations return one n8n item per record. Use **Return All** to retrieve all available records, or disable it and set **Limit**. The node follows API cursors internally. Some endpoints only expose one page, including the **Ranked** comments preview. Existing workflows using node version 1 retain their original response format and parameters.
 
 See https://getsocialapi.com/docs for full API details.
+
+## Billing and pagination
+
+The n8n node is free to install. API calls use the quota of the GetSocialAPI account that owns the key. GetSocialAPI counts requests that return HTTP `200` or `404`. See the [GetSocialAPI pricing plans](https://getsocialapi.com/#pricing) and [rate limits](https://getsocialapi.com/docs/rate-limits/).
+
+Each page fetched is a separate API request. For example, if **Return All** fetches 10 pages that each return `200`, one node execution uses 10 GetSocialAPI requests. To cap the number of records returned, turn off **Return All** and set **Limit**. The node may still fetch multiple pages to reach that limit.
 
 ## Usage example
 
