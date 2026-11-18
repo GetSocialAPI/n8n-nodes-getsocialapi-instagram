@@ -15,10 +15,6 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
     "path": "/profile/{userId}",
     "fields": []
   },
-  "userAbout": {
-    "path": "/user/about/{userId}",
-    "fields": []
-  },
   "searchUsername": {
     "path": "/search/username/{query}",
     "fields": [
@@ -49,10 +45,6 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
   },
   "userHighlights": {
     "path": "/ig/user/highlights/{userId}",
-    "fields": []
-  },
-  "highlightStories": {
-    "path": "/ig/highlight/stories/{highlightId}",
     "fields": []
   },
   "followers": {
@@ -87,10 +79,6 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
       "minId"
     ]
   },
-  "searchClips": {
-    "path": "/ig/media/search_clips/{keyword}",
-    "fields": []
-  },
   "hashtagInfo": {
     "path": "/ig/hashtag/info/{tag}",
     "fields": []
@@ -99,21 +87,9 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
     "path": "/ig/hashtag/search/{query}",
     "fields": []
   },
-  "hashtagPosts": {
-    "path": "/v2/hashtag/posts/{tag}",
-    "fields": [
-      "maxId"
-    ]
-  },
   "locationInfo": {
     "path": "/ig/location/info/{locationId}",
     "fields": []
-  },
-  "locationMedia": {
-    "path": "/ig/location/media/{locationId}",
-    "fields": [
-      "maxId"
-    ]
   }
 };
 const QUERY_NAMES: Record<string, string> = { groupId: 'group_id', userId: 'user_id', maxId: 'max_id', minId: 'min_id', sortOrder: 'sort_order', perPage: 'per_page' };
@@ -123,34 +99,25 @@ function formatPathValue(name: string, value: string): string {
  if (!v) throw new ApplicationError(name + ' is required');
  if (['userId','groupId','locationId'].includes(name) && !/^\d{1,20}$/.test(v)) throw new ApplicationError(name + ' must be a numeric ID');
  if (name === 'mediaId' && !/^(?:\d{1,20}|[A-Za-z0-9_-]{5,64})$/.test(v)) throw new ApplicationError('Invalid media ID or shortcode');
- return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : name === 'highlightId' ? v.replace(/^highlight:/,'') : v);
+ return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : v);
 }
 
 type ListPage = { records: IDataObject[]; cursor?: string };
 
-const LIST_OPERATIONS = new Set(["searchUsername", "similarUsers", "userMedias", "userTags", "userStories", "userHighlights", "highlightStories", "followers", "following", "mediaLikers", "mediaComments", "searchClips", "hashtagSearch", "hashtagPosts", "locationMedia"]);
-const PAGINATED_OPERATIONS = new Set(["userMedias", "userTags", "followers", "following", "mediaComments", "hashtagPosts", "locationMedia"]);
+const LIST_OPERATIONS = new Set(["searchUsername", "similarUsers", "userMedias", "userTags", "userStories", "userHighlights", "followers", "following", "mediaLikers", "mediaComments", "hashtagSearch"]);
+const PAGINATED_OPERATIONS = new Set(["userMedias", "userTags", "followers", "following", "mediaComments"]);
 const LEGACY_LIST_FIELDS = new Set(["count", "maxId", "minId", "query", "sortOrder"]);
 
 const LIST_FIELDS: Record<string, string> = {
  searchUsername: 'users', similarUsers: 'users', userMedias: 'items', userTags: 'items',
  userHighlights: 'tray', followers: 'users', following: 'users', mediaLikers: 'users',
- mediaComments: 'comments', searchClips: 'items', hashtagSearch: 'results', hashtagPosts: 'posts',
+ mediaComments: 'comments', hashtagSearch: 'results',
 };
 
 function getListPage(response: IDataObject, operation: string, qs: Record<string, string | number>): ListPage {
  let values: unknown = response[LIST_FIELDS[operation]];
  if (operation === 'userStories') {
   values = (response.reel as { items?: IDataObject[] } | null)?.items ?? [];
- } else if (operation === 'highlightStories') {
-  const reels = response.reels as Record<string, { items?: IDataObject[] }> | undefined;
-  values = Object.values(reels ?? {}).flatMap(reel => reel.items ?? []);
- } else if (operation === 'locationMedia') {
-  const sections = response.sections as Array<{
-   layout_content?: { medias?: Array<{ media?: IDataObject }> };
-  }> | undefined;
-  values = sections?.flatMap(section => section.layout_content?.medias ?? [])
-   .flatMap(({ media }) => media ? [media] : []);
  }
  if (!Array.isArray(values) && (response.status === 'fail' || response.error || response.message)) {
   throw new ApplicationError('Unexpected Instagram list response');
@@ -235,12 +202,6 @@ export class GetSocialApiInstagram implements INodeType {
         "action": "Get Profile"
       },
       {
-        "name": "Get User About",
-        "value": "userAbout",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Get User About"
-      },
-      {
         "name": "Get Similar Users",
         "value": "similarUsers",
         "description": "Retrieve data using GetSocialAPI",
@@ -267,12 +228,6 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "searchUsername",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Search Usernames"
-      },
-      {
-        "name": "Search Reels",
-        "value": "searchClips",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Search Reels"
       },
       {
         "name": "Search Hashtags",
@@ -319,12 +274,6 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "userHighlights",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Highlights"
-      },
-      {
-        "name": "Get Highlight Stories",
-        "value": "highlightStories",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Get Highlight Stories"
       }
     ],
     "displayOptions": {
@@ -409,12 +358,6 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "hashtagInfo",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Hashtag Info"
-      },
-      {
-        "name": "Get Hashtag Posts",
-        "value": "hashtagPosts",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Get Hashtag Posts"
       }
     ],
     "displayOptions": {
@@ -437,12 +380,6 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "locationInfo",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Location Info"
-      },
-      {
-        "name": "Get Location Media",
-        "value": "locationMedia",
-        "description": "Retrieve data using GetSocialAPI",
-        "action": "Get Location Media"
       }
     ],
     "displayOptions": {
@@ -497,23 +434,6 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "profile"
-        ],
-        "resource": [
-          "profile"
-        ]
-      }
-    }
-  },
-  {
-    "displayName": "User ID",
-    "name": "userId",
-    "type": "string",
-    "default": "",
-    "required": true,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "userAbout"
         ],
         "resource": [
           "profile"
@@ -728,23 +648,6 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "userHighlights"
-        ],
-        "resource": [
-          "usercontent"
-        ]
-      }
-    }
-  },
-  {
-    "displayName": "Highlight ID",
-    "name": "highlightId",
-    "type": "string",
-    "default": "",
-    "required": true,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "highlightStories"
         ],
         "resource": [
           "usercontent"
@@ -1040,23 +943,6 @@ export class GetSocialApiInstagram implements INodeType {
     }
   },
   {
-    "displayName": "Keyword",
-    "name": "keyword",
-    "type": "string",
-    "default": "",
-    "required": true,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "searchClips"
-        ],
-        "resource": [
-          "search"
-        ]
-      }
-    }
-  },
-  {
     "displayName": "Hashtag",
     "name": "tag",
     "type": "string",
@@ -1091,43 +977,6 @@ export class GetSocialApiInstagram implements INodeType {
     }
   },
   {
-    "displayName": "Hashtag",
-    "name": "tag",
-    "type": "string",
-    "default": "",
-    "required": true,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "hashtagPosts"
-        ],
-        "resource": [
-          "hashtag"
-        ]
-      }
-    }
-  },
-  {
-    "displayName": "Max ID (Cursor)",
-    "name": "maxId",
-    "type": "string",
-    "default": "",
-    "required": false,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "hashtagPosts"
-        ],
-        "resource": [
-          "hashtag"
-        ],
-        "@version": [
-          1
-        ]
-      }
-    }
-  },
-  {
     "displayName": "Location ID",
     "name": "locationId",
     "type": "string",
@@ -1140,43 +989,6 @@ export class GetSocialApiInstagram implements INodeType {
         ],
         "resource": [
           "location"
-        ]
-      }
-    }
-  },
-  {
-    "displayName": "Location ID",
-    "name": "locationId",
-    "type": "string",
-    "default": "",
-    "required": true,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "locationMedia"
-        ],
-        "resource": [
-          "location"
-        ]
-      }
-    }
-  },
-  {
-    "displayName": "Max ID (Cursor)",
-    "name": "maxId",
-    "type": "string",
-    "default": "",
-    "required": false,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "locationMedia"
-        ],
-        "resource": [
-          "location"
-        ],
-        "@version": [
-          1
         ]
       }
     }
@@ -1196,15 +1008,11 @@ export class GetSocialApiInstagram implements INodeType {
           "userTags",
           "userStories",
           "userHighlights",
-          "highlightStories",
           "followers",
           "following",
           "mediaLikers",
           "mediaComments",
-          "searchClips",
-          "hashtagSearch",
-          "hashtagPosts",
-          "locationMedia"
+          "hashtagSearch"
         ],
         "@version": [
           2
@@ -1230,15 +1038,11 @@ export class GetSocialApiInstagram implements INodeType {
           "userTags",
           "userStories",
           "userHighlights",
-          "highlightStories",
           "followers",
           "following",
           "mediaLikers",
           "mediaComments",
-          "searchClips",
-          "hashtagSearch",
-          "hashtagPosts",
-          "locationMedia"
+          "hashtagSearch"
         ],
         "returnAll": [
           false
