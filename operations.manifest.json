@@ -9,6 +9,7 @@
     "userTags",
     "userStories",
     "userHighlights",
+    "highlightStories",
     "followers",
     "following",
     "mediaInfo",

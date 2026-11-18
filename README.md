@@ -2,7 +2,7 @@
 
 Community node connecting [n8n](https://n8n.io/) to [GetSocialAPI](https://getsocialapi.com/) Instagram REST API.
 
-## Supported operations (17)
+## Supported operations (18)
 
 - **Get User Info** (`userInfo`): `GET /ig/user/info/{userId}`
 - **Get User by Username** (`userByUsername`): `GET /ig/user/username_info/{username}`
@@ -13,6 +13,7 @@ Community node connecting [n8n](https://n8n.io/) to [GetSocialAPI](https://getso
 - **Get Tagged Posts** (`userTags`): `GET /ig/user/tags/{userId}`
 - **Get Stories** (`userStories`): `GET /ig/user/stories/{userId}`
 - **Get Highlights** (`userHighlights`): `GET /ig/user/highlights/{userId}`
+- **Get Highlight Stories** (`highlightStories`): `GET /ig/highlight/stories/{highlightId}`
 - **Get Followers** (`followers`): `GET /followers/{userId}`
 - **Get Following** (`following`): `GET /following/{userId}`
 - **Get Media Info** (`mediaInfo`): `GET /ig/media/info/{mediaId}`

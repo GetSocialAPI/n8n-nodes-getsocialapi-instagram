@@ -47,6 +47,10 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
     "path": "/ig/user/highlights/{userId}",
     "fields": []
   },
+  "highlightStories": {
+    "path": "/ig/highlight/stories/{highlightId}",
+    "fields": []
+  },
   "followers": {
     "path": "/followers/{userId}",
     "fields": [
@@ -99,12 +103,12 @@ function formatPathValue(name: string, value: string): string {
  if (!v) throw new ApplicationError(name + ' is required');
  if (['userId','groupId','locationId'].includes(name) && !/^\d{1,20}$/.test(v)) throw new ApplicationError(name + ' must be a numeric ID');
  if (name === 'mediaId' && !/^(?:\d{1,20}|[A-Za-z0-9_-]{5,64})$/.test(v)) throw new ApplicationError('Invalid media ID or shortcode');
- return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : v);
+ return encodeURIComponent(name === 'tag' ? v.replace(/^#+/,'') : name === 'highlightId' ? v.replace(/^highlight:/,'') : v);
 }
 
 type ListPage = { records: IDataObject[]; cursor?: string };
 
-const LIST_OPERATIONS = new Set(["searchUsername", "similarUsers", "userMedias", "userTags", "userStories", "userHighlights", "followers", "following", "mediaLikers", "mediaComments", "hashtagSearch"]);
+const LIST_OPERATIONS = new Set(["searchUsername", "similarUsers", "userMedias", "userTags", "userStories", "userHighlights", "highlightStories", "followers", "following", "mediaLikers", "mediaComments", "hashtagSearch"]);
 const PAGINATED_OPERATIONS = new Set(["userMedias", "userTags", "followers", "following", "mediaComments"]);
 const LEGACY_LIST_FIELDS = new Set(["count", "maxId", "minId", "query", "sortOrder"]);
 
@@ -118,6 +122,10 @@ function getListPage(response: IDataObject, operation: string, qs: Record<string
  let values: unknown = response[LIST_FIELDS[operation]];
  if (operation === 'userStories') {
   values = (response.reel as { items?: IDataObject[] } | null)?.items ?? [];
+ } else if (operation === 'highlightStories') {
+  const reels = response.reels as Record<string, { items?: IDataObject[] }> | undefined;
+  values = Object.values(reels ?? {}).flatMap(reel => reel.items ?? []);
+
  }
  if (!Array.isArray(values) && (response.status === 'fail' || response.error || response.message)) {
   throw new ApplicationError('Unexpected Instagram list response');
@@ -274,6 +282,12 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "userHighlights",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Highlights"
+      },
+      {
+        "name": "Get Highlight Stories",
+        "value": "highlightStories",
+        "description": "Retrieve data using GetSocialAPI",
+        "action": "Get Highlight Stories"
       }
     ],
     "displayOptions": {
@@ -656,6 +670,23 @@ export class GetSocialApiInstagram implements INodeType {
     }
   },
   {
+    "displayName": "Highlight ID",
+    "name": "highlightId",
+    "type": "string",
+    "default": "",
+    "required": true,
+    "displayOptions": {
+      "show": {
+        "operation": [
+          "highlightStories"
+        ],
+        "resource": [
+          "usercontent"
+        ]
+      }
+    }
+  },
+  {
     "displayName": "User ID",
     "name": "userId",
     "type": "string",
@@ -1008,6 +1039,7 @@ export class GetSocialApiInstagram implements INodeType {
           "userTags",
           "userStories",
           "userHighlights",
+          "highlightStories",
           "followers",
           "following",
           "mediaLikers",
@@ -1038,6 +1070,7 @@ export class GetSocialApiInstagram implements INodeType {
           "userTags",
           "userStories",
           "userHighlights",
+          "highlightStories",
           "followers",
           "following",
           "mediaLikers",
