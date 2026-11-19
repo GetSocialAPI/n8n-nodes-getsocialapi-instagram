@@ -9,7 +9,7 @@ Community node connecting [n8n](https://n8n.io/) to [GetSocialAPI](https://getso
 - **Get Profile** (`profile`): `GET /profile/{userId}`
 - **Search Usernames** (`searchUsername`): `GET /search/username/{query}`
 - **Get Similar Users** (`similarUsers`): `GET /ig/user/similar/{userId}`
-- **Get User Media** (`userMedias`): `GET /ig/user/media/{userId}`
+- **Get User Media** (`userMedias`): `GET /ig/user/media/{userId}` (up to 12 posts per API page)
 - **Get Tagged Posts** (`userTags`): `GET /ig/user/tags/{userId}`
 - **Get Stories** (`userStories`): `GET /ig/user/stories/{userId}`
 - **Get Highlights** (`userHighlights`): `GET /ig/user/highlights/{userId}`

@@ -28,7 +28,6 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
   "userMedias": {
     "path": "/ig/user/media/{userId}",
     "fields": [
-      "count",
       "maxId"
     ]
   },
@@ -262,7 +261,7 @@ export class GetSocialApiInstagram implements INodeType {
       {
         "name": "Get User Media",
         "value": "userMedias",
-        "description": "Retrieve data using GetSocialAPI",
+        "description": "Get up to 12 profile posts per page",
         "action": "Get User Media"
       },
       {
@@ -528,30 +527,6 @@ export class GetSocialApiInstagram implements INodeType {
           "usercontent"
         ]
       }
-    }
-  },
-  {
-    "displayName": "Count",
-    "name": "count",
-    "type": "number",
-    "default": 0,
-    "required": false,
-    "displayOptions": {
-      "show": {
-        "operation": [
-          "userMedias"
-        ],
-        "resource": [
-          "usercontent"
-        ],
-        "@version": [
-          1
-        ]
-      }
-    },
-    "typeOptions": {
-      "minValue": 0,
-      "maxValue": 50
     }
   },
   {
