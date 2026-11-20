@@ -15,6 +15,10 @@ const OPERATIONS: Record<string, { path: string; fields: string[] }> = {
     "path": "/profile/{userId}",
     "fields": []
   },
+  "userAbout": {
+    "path": "/user/about/{userId}",
+    "fields": []
+  },
   "searchUsername": {
     "path": "/search/username/{query}",
     "fields": [
@@ -207,6 +211,12 @@ export class GetSocialApiInstagram implements INodeType {
         "value": "profile",
         "description": "Retrieve data using GetSocialAPI",
         "action": "Get Profile"
+      },
+      {
+        "name": "Get User About",
+        "value": "userAbout",
+        "description": "Retrieve data using GetSocialAPI",
+        "action": "Get User About"
       },
       {
         "name": "Get Similar Users",
@@ -447,6 +457,23 @@ export class GetSocialApiInstagram implements INodeType {
       "show": {
         "operation": [
           "profile"
+        ],
+        "resource": [
+          "profile"
+        ]
+      }
+    }
+  },
+  {
+    "displayName": "User ID",
+    "name": "userId",
+    "type": "string",
+    "default": "",
+    "required": true,
+    "displayOptions": {
+      "show": {
+        "operation": [
+          "userAbout"
         ],
         "resource": [
           "profile"

@@ -2,11 +2,12 @@
 
 Community node connecting [n8n](https://n8n.io/) to [GetSocialAPI](https://getsocialapi.com/) Instagram REST API.
 
-## Supported operations (18)
+## Supported operations (19)
 
 - **Get User Info** (`userInfo`): `GET /ig/user/info/{userId}`
 - **Get User by Username** (`userByUsername`): `GET /ig/user/username_info/{username}`
 - **Get Profile** (`profile`): `GET /profile/{userId}`
+- **Get User About** (`userAbout`): `GET /user/about/{userId}`
 - **Search Usernames** (`searchUsername`): `GET /search/username/{query}`
 - **Get Similar Users** (`similarUsers`): `GET /ig/user/similar/{userId}`
 - **Get User Media** (`userMedias`): `GET /ig/user/media/{userId}` (up to 12 posts per API page)

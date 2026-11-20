@@ -3,6 +3,7 @@
     "userInfo",
     "userByUsername",
     "profile",
+    "userAbout",
     "searchUsername",
     "similarUsers",
     "userMedias",
